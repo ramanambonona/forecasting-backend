@@ -155,61 +155,180 @@ class ModelHelpers:
         }
     
     @staticmethod
-    def get_model_parameters(model_type: str) -> Dict[str, Any]:
-        """Get default parameters for each model type"""
-        parameters = {
-            "NAIVE": {
-                "description": "Moyenne mobile simple",
-                "parameters": {}
-            },
-            "AR(p)": {
-                "description": "Modèle autorégressif d'ordre p",
-                "parameters": {
-                    "p": {"type": "integer", "default": 1, "min": 1, "max": 12, "description": "Ordre autorégressif"}
-                }
-            },
-            "ARIMA": {
-                "description": "ARIMA (Autoregressive Integrated Moving Average)",
-                "parameters": {
-                    "p": {"type": "integer", "default": 1, "min": 0, "max": 5, "description": "Ordre AR"},
-                    "d": {"type": "integer", "default": 1, "min": 0, "max": 2, "description": "Ordre de différenciation"},
-                    "q": {"type": "integer", "default": 0, "min": 0, "max": 5, "description": "Ordre MA"}
-                }
-            },
-            "SARIMA": {
-                "description": "ARIMA saisonnier",
-                "parameters": {
-                    "order": {"type": "tuple", "default": (1,1,1), "description": "Ordre (p,d,q)"},
-                    "seasonal_order": {"type": "tuple", "default": (1,1,1,12), "description": "Ordre saisonnier (P,D,Q,s)"}
-                }
-            },
-            "Random Forest": {
-                "description": "Random Forest Regressor",
-                "parameters": {
-                    "n_estimators": {"type": "integer", "default": 100, "min": 10, "max": 200, "description": "Nombre d'arbres"},
-                    "max_depth": {"type": "integer", "default": 10, "min": 3, "max": 20, "description": "Profondeur maximale"}
-                }
-            },
-            "Prophet": {
-                "description": "Facebook Prophet",
-                "parameters": {
-                    "changepoint_prior_scale": {"type": "float", "default": 0.05, "min": 0.001, "max": 0.5, "step": 0.01, "description": "Échelle des points de changement"},
-                    "seasonality_prior_scale": {"type": "float", "default": 10.0, "min": 0.01, "max": 100.0, "step": 0.1, "description": "Échelle de saisonnalité"}
-                }
-            },
-            "GARCH": {
-                "description": "Modèle GARCH pour la volatilité",
-                "parameters": {
-                    "p": {"type": "integer", "default": 1, "min": 1, "max": 3, "description": "Ordre GARCH"},
-                    "q": {"type": "integer", "default": 1, "min": 1, "max": 3, "description": "Ordre ARCH"}
-                }
-            }
-        }
-        
-        return parameters.get(model_type, {
-            "description": "Modèle de prévision",
-            "parameters": {}
-        })
+	def get_model_parameters(model_type: str) -> Dict[str, Any]:
+		"""Get default parameters for each model type"""
+		parameters = {
+			# Modèles statistiques simples
+			"NAIVE": {
+				"description": "Moyenne mobile simple",
+				"parameters": {}
+			},
+			"AR(p)": {
+				"description": "Modèle autorégressif d'ordre p",
+				"parameters": {
+					"p": {"type": "integer", "default": 1, "min": 1, "max": 12, "description": "Ordre autorégressif"}
+				}
+			},
+			"MA(q)": {
+				"description": "Moyenne mobile d'ordre q",
+				"parameters": {
+					"q": {"type": "integer", "default": 1, "min": 1, "max": 12, "description": "Ordre moyenne mobile"}
+				}
+			},
+			"ARIMA": {
+				"description": "ARIMA (Autoregressive Integrated Moving Average)",
+				"parameters": {
+					"p": {"type": "integer", "default": 1, "min": 0, "max": 5, "description": "Ordre AR"},
+					"d": {"type": "integer", "default": 1, "min": 0, "max": 2, "description": "Ordre de différenciation"},
+					"q": {"type": "integer", "default": 0, "min": 0, "max": 5, "description": "Ordre MA"}
+				}
+			},
+			"SARIMA": {
+				"description": "ARIMA saisonnier",
+				"parameters": {
+					"order": {"type": "tuple", "default": (1,1,1), "description": "Ordre (p,d,q)"},
+					"seasonal_order": {"type": "tuple", "default": (1,1,1,12), "description": "Ordre saisonnier (P,D,Q,s)"},
+					"seasonal_periods": {"type": "integer", "default": 12, "min": 2, "max": 24, "description": "Période saisonnière"}
+				}
+			},
+			"Exponential Smoothing": {
+				"description": "Lissage exponentiel (Holt-Winters)",
+				"parameters": {
+					"trend": {"type": "string", "default": "additive", "options": ["additive", "multiplicative", None], "description": "Type de tendance"},
+					"seasonal": {"type": "string", "default": "additive", "options": ["additive", "multiplicative", None], "description": "Type de saisonnalité"},
+					"seasonal_periods": {"type": "integer", "default": 12, "min": 2, "max": 24, "description": "Période saisonnière"}
+				}
+			},
+
+			# Modèles multivariés
+			"VAR": {
+				"description": "Vector Autoregression",
+				"parameters": {
+					"maxlags": {"type": "integer", "default": 1, "min": 1, "max": 12, "description": "Ordre maximum"},
+					"ic": {"type": "string", "default": "aic", "options": ["aic", "bic", "hqic", "fpe"], "description": "Critère d'information"}
+				}
+			},
+			"BVAR": {
+				"description": "Bayesian Vector Autoregression",
+				"parameters": {
+					"lags": {"type": "integer", "default": 1, "min": 1, "max": 12, "description": "Ordre"},
+					"prior": {"type": "string", "default": "minnesota", "options": ["minnesota", "conjugate"], "description": "Type de prior"}
+				}
+			},
+			"ARDL": {
+				"description": "Autoregressive Distributed Lag",
+				"parameters": {
+					"lags": {"type": "integer", "default": 1, "min": 1, "max": 12, "description": "Ordre AR"},
+					"max_lead_lags": {"type": "integer", "default": 1, "min": 0, "max": 12, "description": "Ordre des variables exogènes"}
+				}
+			},
+			"Factor Models": {
+				"description": "Modèles à facteurs",
+				"parameters": {
+					"n_factors": {"type": "integer", "default": 3, "min": 1, "max": 10, "description": "Nombre de facteurs"},
+					"factor_order": {"type": "integer", "default": 1, "min": 1, "max": 5, "description": "Ordre des facteurs"}
+				}
+			},
+
+			# Machine Learning
+			"Régression Linéaire": {
+				"description": "Régression linéaire avec caractéristiques temporelles",
+				"parameters": {
+					"fit_intercept": {"type": "boolean", "default": True, "description": "Inclure l'intercept"},
+					"normalize": {"type": "boolean", "default": False, "description": "Normaliser les données"}
+				}
+			},
+			"Random Forest": {
+				"description": "Random Forest Regressor",
+				"parameters": {
+					"n_estimators": {"type": "integer", "default": 100, "min": 10, "max": 200, "description": "Nombre d'arbres"},
+					"max_depth": {"type": "integer", "default": 10, "min": 3, "max": 20, "description": "Profondeur maximale"},
+					"min_samples_split": {"type": "integer", "default": 2, "min": 2, "max": 20, "description": "Échantillons minimum par split"}
+				}
+			},
+			"XGBoost": {
+				"description": "Gradient Boosting extrême",
+				"parameters": {
+					"n_estimators": {"type": "integer", "default": 100, "min": 10, "max": 200, "description": "Nombre d'arbres"},
+					"max_depth": {"type": "integer", "default": 6, "min": 3, "max": 15, "description": "Profondeur maximale"},
+					"learning_rate": {"type": "float", "default": 0.1, "min": 0.01, "max": 0.3, "step": 0.01, "description": "Taux d'apprentissage"}
+				}
+			},
+			"LightGBM": {
+				"description": "Light Gradient Boosting Machine",
+				"parameters": {
+					"n_estimators": {"type": "integer", "default": 100, "min": 10, "max": 200, "description": "Nombre d'arbres"},
+					"max_depth": {"type": "integer", "default": -1, "min": -1, "max": 20, "description": "Profondeur maximale (-1 = illimité)"},
+					"learning_rate": {"type": "float", "default": 0.1, "min": 0.01, "max": 0.3, "step": 0.01, "description": "Taux d'apprentissage"}
+				}
+			},
+
+			# Réseaux de neurones
+			"MLP": {
+				"description": "Multi-Layer Perceptron",
+				"parameters": {
+					"hidden_layer_sizes": {"type": "tuple", "default": (100,), "description": "Tailles des couches cachées"},
+					"activation": {"type": "string", "default": "relu", "options": ["relu", "tanh", "logistic"], "description": "Fonction d'activation"},
+					"learning_rate": {"type": "string", "default": "constant", "options": ["constant", "invscaling", "adaptive"], "description": "Taux d'apprentissage"}
+				}
+			},
+			"LSTM": {
+				"description": "Long Short-Term Memory",
+				"parameters": {
+					"units": {"type": "integer", "default": 50, "min": 10, "max": 200, "description": "Unités LSTM"},
+					"lookback": {"type": "integer", "default": 12, "min": 1, "max": 24, "description": "Périodes historiques"},
+					"dropout": {"type": "float", "default": 0.2, "min": 0.0, "max": 0.5, "step": 0.1, "description": "Taux de dropout"}
+				}
+			},
+
+			# Modèles bayésiens
+			"BART": {
+				"description": "Bayesian Additive Regression Trees",
+				"parameters": {
+					"n_trees": {"type": "integer", "default": 50, "min": 10, "max": 200, "description": "Nombre d'arbres"},
+					"alpha": {"type": "float", "default": 0.95, "min": 0.5, "max": 0.99, "step": 0.01, "description": "Paramètre alpha"},
+					"beta": {"type": "float", "default": 2.0, "min": 1.0, "max": 3.0, "step": 0.1, "description": "Paramètre beta"}
+				}
+			},
+
+			# Modèles spécialisés
+			"GARCH": {
+				"description": "Modèle GARCH pour la volatilité",
+				"parameters": {
+					"p": {"type": "integer", "default": 1, "min": 1, "max": 3, "description": "Ordre GARCH"},
+					"q": {"type": "integer", "default": 1, "min": 1, "max": 3, "description": "Ordre ARCH"},
+					"vol": {"type": "string", "default": "GARCH", "options": ["GARCH", "EGARCH", "GJR-GARCH"], "description": "Type de volatilité"}
+				}
+			},
+			"MIDAS": {
+				"description": "Mixed Data Sampling",
+				"parameters": {
+					"high_freq_lags": {"type": "integer", "default": 3, "min": 1, "max": 12, "description": "Décalages haute fréquence"},
+					"low_freq_lags": {"type": "integer", "default": 1, "min": 1, "max": 4, "description": "Décalages basse fréquence"}
+				}
+			},
+			"TSLM": {
+				"description": "Time Series Linear Model",
+				"parameters": {
+					"trend": {"type": "boolean", "default": True, "description": "Inclure la tendance"},
+					"seasonality": {"type": "boolean", "default": True, "description": "Inclure la saisonnalité"},
+					"fourier_terms": {"type": "integer", "default": 0, "min": 0, "max": 10, "description": "Termes de Fourier"}
+				}
+			},
+			"Prophet": {
+				"description": "Facebook Prophet",
+				"parameters": {
+					"changepoint_prior_scale": {"type": "float", "default": 0.05, "min": 0.001, "max": 0.5, "step": 0.01, "description": "Échelle des points de changement"},
+					"seasonality_prior_scale": {"type": "float", "default": 10.0, "min": 0.01, "max": 100.0, "step": 0.1, "description": "Échelle de saisonnalité"},
+					"holidays_prior_scale": {"type": "float", "default": 10.0, "min": 0.01, "max": 100.0, "step": 0.1, "description": "Échelle des jours fériés"}
+				}
+			}
+		}
+		
+		return parameters.get(model_type, {
+			"description": "Modèle de prévision",
+			"parameters": {}
+		})
     
     @staticmethod
     def recommend_models(analysis_results: Dict[str, Any]) -> List[str]:
