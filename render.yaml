@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: macro-forecasting-backend
+    env: docker
+    plan: free
+    docker:
+      dockerfile: Dockerfile
+    envVars:
+      - key: PYTHONPATH
+        value: /app
+      - key: ENVIRONMENT
+        value: production
