@@ -10,6 +10,7 @@ import logging
 import asyncio
 import sys
 import os
+import io
 
 # Configuration pour Render
 app = FastAPI(
@@ -94,11 +95,14 @@ async def upload_data(file: UploadFile = File(...), orientation: str = Form("dat
         if file_extension not in allowed_extensions:
             raise HTTPException(status_code=400, detail="Type de fichier non supporté. Utilisez CSV, XLS ou XLSX.")
         
-        # Lecture du fichier
+        # Lire le contenu du fichier d'abord
+        contents = await file.read()
+        
+        # Lecture du fichier depuis les bytes
         if file_extension == "csv":
-            df = pd.read_csv(file.file)
+            df = pd.read_csv(io.BytesIO(contents))
         else:
-            df = pd.read_excel(file.file)
+            df = pd.read_excel(io.BytesIO(contents))
         
         logger.info(f"✅ Fichier lu: {df.shape}")
         
@@ -259,3 +263,4 @@ if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
 
     uvicorn.run(app, host="0.0.0.0", port=port)
+
