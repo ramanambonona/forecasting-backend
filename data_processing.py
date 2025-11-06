@@ -3,11 +3,9 @@ import numpy as np
 import re
 from datetime import datetime
 from typing import Dict, Any
+import logging
 
-# Assurez-vous d'avoir 'logger' défini quelque part dans votre environnement
-# Par exemple:
-# import logging
-# logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 class DataProcessor:
     def __init__(self):
@@ -182,3 +180,4 @@ class DataProcessor:
         df_processed = self.validate_numeric_columns(df_processed)
         df_processed = df_processed.dropna(subset=['Date'])
         return df_processed
+
